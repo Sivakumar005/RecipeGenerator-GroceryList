@@ -5,6 +5,7 @@ const cors=require('cors');
 
 const recipeRoutes=require('./routes/recipeRoutes');
 
+
 dotenv.config();
 const app=express();
 app.use(cors());
@@ -15,6 +16,7 @@ app.use('/api/recipes',recipeRoutes);
 app.get('/',(req,res)=>{
     res.send("Hello from backend");
 })
+
 
 const PORT = process.env.PORT || 5000;
 

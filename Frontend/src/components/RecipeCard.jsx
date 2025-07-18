@@ -1,11 +1,26 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card, CardContent, CardMedia,
-  Typography, Button, Stack, Box
+  Typography, Button, Stack
 } from '@mui/material';
 import api from '../api/api';
 
-const RecipeCard = ({ recipe }) => {
+const RecipeCard = ({ recipe, onUnsave }) => {
+  const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    const checkIfSaved = async () => {
+      try {
+        const response = await api.get('/saved');
+        const savedTitles = response.data.map(r => r.title);
+        setIsSaved(savedTitles.includes(recipe.title));
+      } catch (error) {
+        console.error('Failed to check saved recipes:', error);
+      }
+    };
+    checkIfSaved();
+  }, [recipe.title]);
+
   const handleGroceryList = async () => {
     try {
       await api.post('/grocery', {
@@ -19,21 +34,28 @@ const RecipeCard = ({ recipe }) => {
     }
   };
 
+  const handleToggleSave = async () => {
+    try {
+      if (isSaved) {
+        await api.delete('/unsave', {
+          data: { title: recipe.title }
+        });
+        setIsSaved(false);
+        alert('❌ Recipe unsaved!');
+        if (onUnsave) onUnsave(recipe.title); // notify parent
+      } else {
+        await api.post('/save', { ...recipe });
+        setIsSaved(true);
+        alert('✅ Recipe saved!');
+      }
+    } catch (error) {
+      console.error('Save/Unsave failed:', error);
+      alert('❌ Failed to save or unsave');
+    }
+  };
+
   return (
-    <Card
-      sx={{
-        borderRadius: 3,
-        boxShadow: 3,
-        transition: '0.3s',
-        '&:hover': {
-          boxShadow: 6,
-          transform: 'translateY(-2px)',
-        },
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column'
-      }}
-    >
+    <Card sx={{ borderRadius: 3, boxShadow: 3, transition: '0.3s', '&:hover': { boxShadow: 6, transform: 'translateY(-2px)' }, height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CardMedia
         component="img"
         height="180"
@@ -50,21 +72,21 @@ const RecipeCard = ({ recipe }) => {
         </Typography>
 
         <Stack direction="row" spacing={1}>
-          {/* <Button
-            href={recipe.sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            variant="outlined"
-            size="small"
-          >
-            View
-          </Button> */}
           <Button
             variant="contained"
             size="small"
             onClick={handleGroceryList}
           >
             Grocery List
+          </Button>
+
+          <Button
+            variant={isSaved ? 'contained' : 'outlined'}
+            color={isSaved ? 'secondary' : 'primary'}
+            size="small"
+            onClick={handleToggleSave}
+          >
+            {isSaved ? 'Unsave' : 'Save'}
           </Button>
         </Stack>
       </CardContent>

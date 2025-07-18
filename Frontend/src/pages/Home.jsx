@@ -22,7 +22,6 @@ export const Home = () => {
     }
     return (
         <>
-            <Navbar />
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, my: 2 }}>
 
                 <TextField
